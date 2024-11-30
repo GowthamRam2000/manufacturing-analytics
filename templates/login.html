@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Manufacturing Analytics</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Manufacturing Analytics</h1>
+            <p class="text-gray-600 mt-2">Sign in to access your dashboard</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="email" name="email" required
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="password" name="password" required
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div id="error-message" class="text-red-600 text-sm hidden"></div>
+
+            <button type="submit"
+                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Sign In
+            </button>
+        </form>
+
+        <div class="mt-4">
+            <a href="/register"
+               class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Register New Account
+            </a>
+        </div>
+
+        <div class="mt-6">
+            <div class="text-center">
+                <p class="text-gray-600 text-sm">Default credentials for testing:</p>
+                <p class="text-gray-600 text-sm">Email: admin@manufacturing.com</p>
+                <p class="text-gray-600 text-sm">Password: Admin@123456</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJqVhwFHyc4OtQC-9a0p1UfVS4U1NOyh4",
+            authDomain: "log-analysis-4a093.firebaseapp.com",
+            projectId: "log-analysis-4a093",
+            storageBucket: "log-analysis-4a093.firebasestorage.app",
+            messagingSenderId: "163835798330",
+            appId: "1:163835798330:web:18aaf9bf231858dcd32603",
+            measurementId: "G-TVY7PBZ4E1"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const idToken = await userCredential.user.getIdToken();
+
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ idToken: idToken })
+                });
+
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    throw new Error('Login failed');
+                }
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html>

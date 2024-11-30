@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Manufacturing Analytics</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Manufacturing Analytics</h1>
+            <p class="text-gray-600 mt-2">Create a new account</p>
+        </div>
+
+        <form id="registerForm" class="space-y-6">
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="email" name="email" required
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="password" name="password" required
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div>
+                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <div id="error-message" class="text-red-600 text-sm hidden"></div>
+            <div id="success-message" class="text-green-600 text-sm hidden"></div>
+
+            <button type="submit"
+                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Register
+            </button>
+        </form>
+
+        <div class="mt-4">
+            <a href="/login"
+               class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-indigo-600 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Back to Login
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJqVhwFHyc4OtQC-9a0p1UfVS4U1NOyh4",
+            authDomain: "log-analysis-4a093.firebaseapp.com",
+            projectId: "log-analysis-4a093",
+            storageBucket: "log-analysis-4a093.firebasestorage.app",
+            messagingSenderId: "163835798330",
+            appId: "1:163835798330:web:18aaf9bf231858dcd32603",
+            measurementId: "G-TVY7PBZ4E1"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            document.getElementById('success-message').classList.add('hidden');
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            document.getElementById('error-message').classList.add('hidden');
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            try {
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+
+                const idToken = await userCredential.user.getIdToken();
+
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        idToken: idToken,
+                        email: email
+                    })
+                });
+
+                if (response.ok) {
+                    showSuccess('Registration successful! Redirecting to login...');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    throw new Error('Registration failed');
+                }
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+    </script>
+</body>
+</html>

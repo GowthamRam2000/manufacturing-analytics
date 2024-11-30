@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Insights - Manufacturing Analytics</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-lg mb-8">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-2xl font-bold text-gray-800">Manufacturing Analytics</a>
+                    </div>
+                    <div class="ml-6 flex items-center space-x-4">
+                        <a href="/" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                        <span class="text-purple-600">ML Insights</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="userEmail" class="text-gray-600"></div>
+                    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4">
+        <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+
+        <div class="mb-8">
+            <label for="machineSelect" class="block text-sm font-medium text-gray-700">Select Machine</label>
+            <select id="machineSelect"
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 rounded-md">
+                <option value="">Select a machine...</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Failure Prediction</h3>
+                <div id="failurePrediction" class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-700">Probability</span>
+                            <span class="text-sm font-medium text-gray-700" id="failureProb">-</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="failureProbBar" class="bg-red-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="riskLevel" class="text-lg font-bold">-</div>
+                    <div id="timeToFailure" class="text-gray-600">-</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Component Health Analysis</h3>
+                <div id="componentHealth" class="space-y-4">
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Historical Performance</h3>
+                <div id="historicalPlot" class="w-full h-[400px]"></div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Maintenance Recommendations</h3>
+                <div id="recommendations" class="space-y-4">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJqVhwFHyc4OtQC-9a0p1UfVS4U1NOyh4",
+            authDomain: "log-analysis-4a093.firebaseapp.com",
+            projectId: "log-analysis-4a093",
+            storageBucket: "log-analysis-4a093.firebasestorage.app",
+            messagingSenderId: "163835798330",
+            appId: "1:163835798330:web:18aaf9bf231858dcd32603",
+            measurementId: "G-TVY7PBZ4E1"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        async function logout() {
+            try {
+                await firebase.auth().signOut();
+                window.location.href = '/logout';
+            } catch (error) {
+                console.error('Error logging out:', error);
+                $('#errorMessage').text('Failed to logout. Please try again.').removeClass('hidden');
+            }
+        }
+
+        function loadMachineList() {
+            $.get('/api/machine_status', function(data) {
+                const select = $('#machineSelect');
+                select.empty();
+                select.append('<option value="">Select a machine...</option>');
+
+                Object.keys(data).sort().forEach(machineId => {
+                    select.append(`<option value="${machineId}">${machineId}</option>`);
+                });
+            }).fail(function(error) {
+                $('#errorMessage').text('Failed to load machine list: ' + error.statusText).removeClass('hidden');
+            });
+        }
+
+        function loadMachinePredictions(machineId) {
+            if (!machineId) return;
+
+            $.get(`/api/predictive_analytics/${machineId}`, function(data) {
+                if (data.error) {
+                    $('#errorMessage').text(data.error).removeClass('hidden');
+                    return;
+                }
+
+                $('#errorMessage').addClass('hidden');
+
+                const predictions = data.maintenance_prediction;
+                const failureProb = predictions.probability * 100;
+                $('#failureProb').text(`${failureProb.toFixed(1)}%`);
+                $('#failureProbBar').css('width', `${failureProb}%`);
+
+                const riskLevel = predictions.next_maintenance_needed ? 'High' : 'Low';
+                $('#riskLevel').html(`Risk Level: <span class="${
+                    riskLevel === 'High' ? 'text-red-600' :
+                    'text-yellow-600'
+                }">${riskLevel}</span>`);
+
+                $('#timeToFailure').text(
+                    `Estimated Days Until Maintenance: ${predictions.days_until_maintenance || 'N/A'}`
+                );
+
+                const healthDiv = $('#componentHealth');
+                healthDiv.empty();
+                Object.entries(data.trends).forEach(([component, health]) => {
+                    const trendIcon = health.direction === 'Increasing' ? '↑' : '↓';
+                    const trendClass = health.direction === 'Increasing' ? 'text-red-600' : 'text-green-600';
+
+                    healthDiv.append(`
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium capitalize">${component.replace('_reading', '').replace('_', ' ')}</span>
+                                <span class="${trendClass}">${trendIcon} ${health.magnitude.toFixed(4)}</span>
+                            </div>
+                            <div class="mt-2 flex justify-between text-sm">
+                                <span>Current Value: ${health.current_value.toFixed(2)}</span>
+                                <span>Stability: ${health.stability}</span>
+                            </div>
+                        </div>
+                    `);
+                });
+
+                if (data.visualizations && data.visualizations.predictions) {
+                    const plotData = JSON.parse(data.visualizations.predictions);
+                    Plotly.newPlot('historicalPlot', plotData.data, plotData.layout);
+                }
+
+                if (data.recommendations) {
+                    const recsDiv = $('#recommendations');
+                    recsDiv.empty();
+                    data.recommendations.forEach(rec => {
+                        const priorityClass = rec.priority === 'high' ? 'border-red-500 bg-red-50' :
+                                            rec.priority === 'medium' ? 'border-yellow-500 bg-yellow-50' :
+                                            'border-green-500 bg-green-50';
+                        recsDiv.append(`
+                            <div class="border-l-4 ${priorityClass} rounded-lg p-4">
+                                <h4 class="font-semibold">${rec.title}</h4>
+                                <p class="text-gray-600 mt-1">${rec.description}</p>
+                            </div>
+                        `);
+                    });
+                }
+
+            }).fail(function(error) {
+                $('#errorMessage').text('Failed to load predictions: ' + error.statusText).removeClass('hidden');
+            });
+        }
+
+        $('#machineSelect').on('change', function() {
+            const machineId = $(this).val();
+            if (machineId) {
+                loadMachinePredictions(machineId);
+            }
+        });
+
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                $('#userEmail').text(user.email);
+                loadMachineList();
+            } else {
+                window.location.href = '/login';
+            }
+        });
+    </script>
+</body>
+</html>

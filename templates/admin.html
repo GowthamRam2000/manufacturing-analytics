@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Manufacturing Analytics</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <h1 class="text-xl font-bold">Manufacturing Analytics Admin</h1>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <a href="/" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                        Dashboard
+                    </a>
+                    <a href="/logout" class="bg-red-500 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-2">Total Records</h3>
+                <p id="totalRecords" class="text-3xl font-bold text-blue-600">-</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-2">Total Machines</h3>
+                <p id="totalMachines" class="text-3xl font-bold text-green-600">-</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-2">Date Range</h3>
+                <p id="dateRange" class="text-sm text-gray-600">-</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-2">Machine States</h3>
+                <div id="stateDistribution" class="text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Recent Data Records</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Machine ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temperature</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vibration</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pressure</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RPM</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataRecordsBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateDashboard() {
+            $.get('/api/admin/data_records', function(data) {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                $('#totalRecords').text(data.total_records.toLocaleString());
+                $('#totalMachines').text(data.machines.toLocaleString());
+                $('#dateRange').html(`${data.time_range.start}<br>to<br>${data.time_range.end}`);
+
+                const stateHtml = Object.entries(data.state_distribution)
+                    .map(([state, count]) => `
+                        <div class="flex justify-between mb-1">
+                            <span class="capitalize">${state}:</span>
+                            <span class="font-semibold">${count.toLocaleString()}</span>
+                        </div>
+                    `).join('');
+                $('#stateDistribution').html(stateHtml);
+
+                const tableBody = $('#dataRecordsBody');
+                tableBody.empty();
+
+                data.sample_data.forEach(record => {
+                    const row = `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.timestamp}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.machine_id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    ${record.state === 'running' ? 'bg-green-100 text-green-800' :
+                                      record.state === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-red-100 text-red-800'}">
+                                    ${record.state}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.temperature_reading.toFixed(2)}°C</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.vibration_reading.toFixed(2)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.pressure_reading.toFixed(2)} PSI</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.rpm_reading.toFixed(2)}</td>
+                        </tr>
+                    `;
+                    tableBody.append(row);
+                });
+            });
+        }
+
+        updateDashboard();
+        setInterval(updateDashboard, 30000);
+    </script>
+</body>
+</html>

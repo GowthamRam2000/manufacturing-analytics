@@ -1,0 +1,96 @@
+.
+├── cloud_function
+│   ├── data_generator_gcp.py
+│   ├── main.py
+│   └── requirements.txt
+├── cloud_function_ml
+│   ├── main.py
+│   └── requirements.txt
+├── models
+│   ├── machine_1
+│   │   ├── lstm_model.keras
+│   │   └── scaler.pkl
+│   ├── machine_10
+│   │   ├── lstm_model.keras
+│   │   └── scaler.pkl
+│   ├── machine_2
+│   │   ├── lstm_model.keras
+│   │   └── scaler.pkl
+│   ├── machine_3
+│   │   ├── lstm_model.keras
+│   │   └── scaler.pkl
+│   ├── machine_4
+│   │   ├── lstm_model.keras
+│   │   └── scaler.pkl
+│   ├── machine_5
+│   │   ├── lstm_model.keras
+│   │   └── scaler.pkl
+│   ├── machine_6
+│   │   ├── lstm_model.keras
+│   │   └── scaler.pkl
+│   ├── machine_7
+│   │   ├── lstm_model.keras
+│   │   └── scaler.pkl
+│   ├── machine_8
+│   │   ├── lstm_model.keras
+│   │   └── scaler.pkl
+│   └── machine_9
+│       ├── lstm_model.keras
+│       └── scaler.pkl
+├── real_time_pipeline
+│   ├── processor
+│   │   ├── main.py
+│   │   └── requirements.txt
+│   └── publisher
+│       ├── publisher_script.py
+│       ├── requirements.txt
+│       └── sensor_publisher.py
+├── templates
+│   ├── admin.html
+│   ├── index.html
+│   ├── login.html
+│   ├── ml_insights.html
+│   └── register.html
+├── venv
+│   ├── bin
+│   │   ├── Activate.ps1
+│   │   ├── activate
+│   │   ├── activate.csh
+│   │   ├── activate.fish
+│   │   ├── dash-generate-components
+│   │   ├── dash-update-components
+│   │   ├── f2py
+│   │   ├── flask
+│   │   ├── numpy-config
+│   │   ├── pip
+│   │   ├── pip3
+│   │   ├── pip3.10
+│   │   ├── python -> /Users/gowthamram/PycharmProjects/manufacturing_analytics/.venv/bin/python
+│   │   ├── python3 -> python
+│   │   ├── python3.10 -> python
+│   │   └── renderer
+│   ├── etc
+│   │   └── jupyter
+│   ├── include
+│   ├── lib
+│   │   └── python3.10
+│   ├── share
+│   │   └── jupyter
+│   └── pyvenv.cfg
+├── Dockerfile
+├── app.py
+├── app.yaml
+├── check_config.py
+├── config.py
+├── create_admin.py
+├── file_structure.txt
+├── generate_and_upload.py
+├── generate_data.py
+├── generate_initial_data.py
+├── manufacturing_sensor_data.csv
+├── predictive_maintenance.py
+├── requirements.txt
+├── service-account.json
+└── train_model.py
+
+27 directories, 67 files
