@@ -120,7 +120,6 @@ def load_model_from_gcs(machine_id):
         storage_client = storage.Client(credentials=credentials)
         bucket = storage_client.bucket(BUCKET_NAME)
 
-        # Check if model exists
         model_path = f'models/{machine_id}'
         model_blob = bucket.blob(f'{model_path}/lstm_model.keras')
         scaler_blob = bucket.blob(f'{model_path}/scaler.pkl')
@@ -129,19 +128,15 @@ def load_model_from_gcs(machine_id):
             logger.warning(f"Model files not found for {machine_id}")
             return None, None
 
-        # Create temp directory
         temp_dir = f'/tmp/model_{machine_id}'
         os.makedirs(temp_dir, exist_ok=True)
 
-        # Download files
         model_blob.download_to_filename(f'{temp_dir}/model.keras')
         scaler_blob.download_to_filename(f'{temp_dir}/scaler.pkl')
 
-        # Load model and scaler
         model = tf.keras.models.load_model(f'{temp_dir}/model.keras')
         scaler = joblib.load(f'{temp_dir}/scaler.pkl')
 
-        # Cache the loaded model
         model_cache[machine_id] = (model, scaler)
         logger.info(f"Successfully loaded model for {machine_id}")
 
@@ -183,34 +178,30 @@ def load_data_from_gcs():
 def calculate_health_score(sensor_data):
     """Calculate machine health score based on sensor readings with improved validation"""
     try:
-        # Input validation
         required_readings = ['temperature_reading', 'vibration_reading',
                              'pressure_reading', 'rpm_reading']
         for reading in required_readings:
             if reading not in sensor_data:
                 raise ValueError(f"Missing required sensor reading: {reading}")
 
-        # Calculate normalized component scores (0-25 each)
         temp_score = max(0, min(25, 25 * (1 - (sensor_data['temperature_reading'] - 65) / 20)))
         vibration_score = max(0, min(25, 25 * (1 - (sensor_data['vibration_reading'] - 0.5) / 0.3)))
         pressure_score = max(0, min(25, 25 * (1 - abs(sensor_data['pressure_reading'] - 100) / 30)))
         rpm_score = max(0, min(25, 25 * (1 - abs(sensor_data['rpm_reading'] - 1000) / 200)))
 
-        # Total health score (0-100)
         health_score = temp_score + vibration_score + pressure_score + rpm_score
 
         return round(health_score, 2)
     except Exception as e:
         logger.error(f"Error calculating health score: {str(e)}")
-        return 50  # Return default score on error
+        return 50  
 
 def predict_failures(machine_data, machine_id):
     """Enhanced failure prediction with improved error handling and validation"""
     try:
         logger.info(f"Starting failure prediction for {machine_id}")
 
-        # Validate input data
-        if not validate_data(machine_data, min_records=30):  # Reduced minimum for more flexibility
+        if not validate_data(machine_data, min_records=30):  
             logger.warning(f"Insufficient data for prediction: {machine_id}")
             return {
                 'failure_probability': 0.5,
