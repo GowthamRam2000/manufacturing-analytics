@@ -80,7 +80,7 @@ class ManufacturingSensorDataGenerator:
 
         blob.upload_from_string(csv_data, content_type='text/csv')
 
-        print(f"Generated {len(df)} records and uploaded to gs://{bucket_name}/{blob_name}")
+        print(f"generated {len(df)} records and uploaded to gs://{bucket_name}/{blob_name}")
         return df
 
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     generator = ManufacturingSensorDataGenerator(num_machines=10)
     data = generator.save_to_gcs(num_records=100000)
 
-    print("\nData Statistics:")
-    print(f"Total Records: {len(data)}")
-    print("\nMachine State Distribution:")
+    print("\ndata statistics:")
+    print(f"total records: {len(data)}")
+    print("\nmachine state distribution:")
     print(data['state'].value_counts(normalize=True))
