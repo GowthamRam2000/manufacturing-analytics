@@ -49,8 +49,6 @@ def train_lstm_model(data, sequence_length=100):
     except Exception as e:
         logger.error(f"Error training model: {str(e)}")
         return None, None, None
-
-
 def save_model_to_gcs(model, scaler, machine_id, bucket_name):
     """Save trained model to Google Cloud Storage"""
     try:
@@ -79,7 +77,6 @@ def save_model_to_gcs(model, scaler, machine_id, bucket_name):
     except Exception as e:
         logger.error(f"Error saving model: {str(e)}")
         return False
-
 
 @functions_framework.http
 def retrain_models(request):
