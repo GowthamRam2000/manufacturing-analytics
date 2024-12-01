@@ -41,12 +41,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 FIREBASE_CONFIG = {
-    "apiKey": "AIzaSyCJqVhwFHyc4OtQC-9a0p1UfVS4U1NOyh4",
-    "authDomain": "log-analysis-4a093.firebaseapp.com",
+    "apiKey": "",
+    "authDomain": ".firebaseapp.com",
     "projectId": "log-analysis-4a093",
-    "storageBucket": "log-analysis-4a093.firebasestorage.app",
+    "storageBucket": "",
     "messagingSenderId": "163835798330",
-    "appId": "1:163835798330:web:18aaf9bf231858dcd32603",
+    "appId": "",
     "measurementId": "G-TVY7PBZ4E1"
 }
 
@@ -694,7 +694,7 @@ def machine_history(machine_id):
             trend = np.polyfit(range(len(data)), data, 1)[0]
             trends[sensor] = {
                 'direction': 'Increasing' if trend > 0 else 'Decreasing',
-                'strength': abs(trend * 100)  # Scale for better readability
+                'strength': abs(trend * 100)  
             }
 
         fig = go.Figure()
@@ -809,7 +809,6 @@ def ml_insights():
     """ML insights dashboard route"""
     logger.info("Accessing ML insights page")
     try:
-        # Verify data availability
         df = load_data_from_gcs()
         if df is None:
             logger.error("No data available for ML insights")
