@@ -47,8 +47,8 @@ class ManufacturingSensorDataGenerator:
         self.state_probabilities = [0.85, 0.10, 0.05]
 
         self.maintenance_intervals = {
-            'scheduled': 30,  # days
-            'preventive': 15  # days
+            'scheduled': 30,  
+            'preventive': 15  
         }
 
     def generate_sensor_reading(self, sensor_type, machine_state, time_until_failure=None):
@@ -74,7 +74,7 @@ class ManufacturingSensorDataGenerator:
             current_date = self.start_date
             machine_state = 'running'
             maintenance_counter = 0
-            time_until_failure = random.randint(100, 200)  # Hours until next failure
+            time_until_failure = random.randint(100, 200)  
             last_maintenance = current_date - timedelta(days=random.randint(0, 30))
 
             for _ in range(records_per_machine):
@@ -85,7 +85,7 @@ class ManufacturingSensorDataGenerator:
                     elif (current_date - last_maintenance).days >= self.maintenance_intervals['scheduled']:
                         machine_state = 'maintenance'
                         last_maintenance = current_date
-                        maintenance_counter = random.randint(5, 10)  # Maintenance duration
+                        maintenance_counter = random.randint(5, 10)  
                     else:
                         machine_state = np.random.choice(
                             self.machine_states,
@@ -111,7 +111,7 @@ class ManufacturingSensorDataGenerator:
 
                 current_date += timedelta(minutes=5)
                 if machine_state != 'maintenance':
-                    time_until_failure -= 1 / 12  # Decrease by 5 minutes
+                    time_until_failure -= 1 / 12  
 
         df = pd.DataFrame(data)
         return df
@@ -167,4 +167,4 @@ if __name__ == "__main__":
     else:
         data = generator.save_to_gcs(num_records=100000)
 
-    print("\nData Generation Complete!")
+    print("\nData Generation Complete")
